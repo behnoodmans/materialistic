@@ -68,7 +68,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @SuppressWarnings("unchecked")
-@Config(shadows = {ShadowWebView.class})
+@Config(shadows = {ShadowWebView.class}, sdk = 18)
 @RunWith(TestRunner.class)
 public class ItemSyncAdapterTest {
     private ItemSyncAdapter adapter;
@@ -94,14 +94,14 @@ public class ItemSyncAdapterTest {
         adapter = new ItemSyncAdapter(service, new TestRestServiceFactory(), readabilityClient);
         syncPreferences = service.getSharedPreferences(
                 service.getPackageName() +
-                        ItemSyncAdapter.SYNC_PREFERENCES_FILE, Context.MODE_PRIVATE);
+                        SyncDelegate.SYNC_PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
     @Test
     public void testSyncDisabled() {
         PreferenceManager.getDefaultSharedPreferences(service)
                 .edit().clear().apply();
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         assertNull(ShadowContentResolver.getStatus(Application.createSyncAccount(),
                 MaterialisticProvider.PROVIDER_AUTHORITY));
     }
@@ -113,7 +113,7 @@ public class ItemSyncAdapterTest {
         when(call.execute()).thenReturn(Response.success(hnItem));
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
 
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         // cache hit, should not try network or defer
@@ -129,7 +129,7 @@ public class ItemSyncAdapterTest {
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
 
         setNetworkType(ConnectivityManager.TYPE_MOBILE);
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         // should defer
@@ -149,7 +149,7 @@ public class ItemSyncAdapterTest {
                         service.getString(R.string.offline_data_default))
                 .apply();
         setNetworkType(ConnectivityManager.TYPE_MOBILE);
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         // should try cache, then network
@@ -165,7 +165,7 @@ public class ItemSyncAdapterTest {
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
         when(TestRestServiceFactory.hnRestService.networkItem(any())).thenReturn(call);
 
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         // should try cache before network
@@ -193,7 +193,7 @@ public class ItemSyncAdapterTest {
                 .edit()
                 .putBoolean(service.getString(R.string.pref_offline_comments), false)
                 .apply();
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         // should not sync children
@@ -208,7 +208,7 @@ public class ItemSyncAdapterTest {
         when(TestRestServiceFactory.hnRestService.networkItem(any())).thenReturn(call);
 
         syncPreferences.edit().putBoolean("1", true).putBoolean("2", true).apply();
-        ItemSyncAdapter.initSync(service, null);
+        SyncDelegate.initSync(service, null);
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
         verify(TestRestServiceFactory.hnRestService, times(2)).cachedItem(any());
     }
@@ -234,7 +234,7 @@ public class ItemSyncAdapterTest {
                 .edit()
                 .putBoolean(service.getString(R.string.pref_offline_readability), false)
                 .apply();
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         verify(TestRestServiceFactory.hnRestService).cachedItem(any());
@@ -258,7 +258,7 @@ public class ItemSyncAdapterTest {
         when(call.execute()).thenReturn(Response.success(item));
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
 
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         verify(TestRestServiceFactory.hnRestService).cachedItem(any());
@@ -278,7 +278,7 @@ public class ItemSyncAdapterTest {
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
 
         setNetworkType(ConnectivityManager.TYPE_MOBILE);
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         verify(readabilityClient, never()).parse(any(), any());
@@ -296,7 +296,7 @@ public class ItemSyncAdapterTest {
         when(call.execute()).thenReturn(Response.success(item));
         when(TestRestServiceFactory.hnRestService.cachedItem(any())).thenReturn(call);
 
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         verify(TestRestServiceFactory.hnRestService).cachedItem(any());
@@ -387,7 +387,7 @@ public class ItemSyncAdapterTest {
                 .edit()
                 .putBoolean(service.getString(R.string.pref_offline_notification), true)
                 .apply();
-        ItemSyncAdapter.initSync(service, "1");
+        SyncDelegate.initSync(service, "1");
         adapter.onPerformSync(mock(Account.class), getLastSyncExtras(), null, null, null);
 
         ShadowNotificationManager notificationManager = shadowOf((NotificationManager) service
